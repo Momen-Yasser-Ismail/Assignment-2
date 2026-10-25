@@ -1,0 +1,280 @@
+@startuml VoleMachine
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+hide empty members
+
+' ===================== HARDWARE =====================
+package "Hardware" {
+
+  class Screen {
+    - buffer : std::string
+    + print(value : uint8_t) : void
+    + getContent() : const std::string&
+    + clear() : void
+  }
+
+  class Memory {
+    + {static} SIZE : size_t = 256
+    + {static} SCREEN_ADDRESS : uint8_t = 0xFF
+    - cells : std::array<uint8_t, 256>
+    - screen : Screen&
+    + Memory(screen : Screen&)
+    + read(address : uint8_t) : uint8_t
+    + write(address : uint8_t, value : uint8_t) : void
+    + clear() : void
+  }
+
+  class RegisterFile {
+    + {static} COUNT : size_t = 16
+    - regs : std::array<uint8_t, 16>
+    + read(index : uint8_t) : uint8_t
+    + write(index : uint8_t, value : uint8_t) : void
+    + clear() : void
+  }
+
+  class ALU <<utility>> {
+    + {static} addTwosComplement(a : uint8_t, b : uint8_t) : uint8_t
+    + {static} addFloat(a : uint8_t, b : uint8_t) : uint8_t
+    + {static} bitOr(a : uint8_t, b : uint8_t) : uint8_t
+    + {static} bitAnd(a : uint8_t, b : uint8_t) : uint8_t
+    + {static} bitXor(a : uint8_t, b : uint8_t) : uint8_t
+    + {static} rotateRight(value : uint8_t, times : uint8_t) : uint8_t
+    - {static} floatToReal(bits : uint8_t) : double
+    - {static} realToFloat(x : double) : uint8_t
+  }
+
+  interface ExecutionContext {
+    + {abstract} readRegister(index : uint8_t) : uint8_t
+    + {abstract} writeRegister(index : uint8_t, value : uint8_t) : void
+    + {abstract} readMemory(address : uint8_t) : uint8_t
+    + {abstract} writeMemory(address : uint8_t, value : uint8_t) : void
+    + {abstract} setProgramCounter(address : uint8_t) : void
+    + {abstract} halt() : void
+  }
+
+  class CPU {
+    - pc : uint8_t
+    - ir : uint16_t
+    - halted : bool
+    - registers : RegisterFile
+    - memory : Memory&
+    - current : std::unique_ptr<Instruction>
+    + CPU(memory : Memory&)
+    + restart(startAddress : uint8_t) : void
+    + step() : void
+    + run() : void
+    + isHalted() : bool
+    + getPC() : uint8_t
+    + getIR() : uint16_t
+    + getRegisters() : const RegisterFile&
+    + readRegister(index : uint8_t) : uint8_t
+    + writeRegister(index : uint8_t, value : uint8_t) : void
+    + readMemory(address : uint8_t) : uint8_t
+    + writeMemory(address : uint8_t, value : uint8_t) : void
+    + setProgramCounter(address : uint8_t) : void
+    + halt() : void
+    - fetch() : void
+    - decode() : void
+    - execute() : void
+  }
+}
+
+' ===================== INSTRUCTIONS =====================
+package "Instructions" {
+
+  abstract class Instruction {
+    # raw : uint16_t
+    # Instruction(raw : uint16_t)
+    + getRaw() : uint16_t
+    + toHexString() : std::string
+    + {abstract} execute(ctx : ExecutionContext&) : void
+  }
+
+  abstract class BinaryRegisterInstruction {
+    # r : uint8_t
+    # s : uint8_t
+    # t : uint8_t
+    + execute(ctx : ExecutionContext&) : void
+    # {abstract} compute(a : uint8_t, b : uint8_t) : uint8_t
+  }
+
+  class LoadFromMemory {
+    - r : uint8_t
+    - address : uint8_t
+    + execute(ctx : ExecutionContext&) : void
+  }
+  class LoadImmediate {
+    - r : uint8_t
+    - value : uint8_t
+    + execute(ctx : ExecutionContext&) : void
+  }
+  class StoreToMemory {
+    - r : uint8_t
+    - address : uint8_t
+    + execute(ctx : ExecutionContext&) : void
+  }
+  class CopyRegister {
+    - r : uint8_t
+    - s : uint8_t
+    + execute(ctx : ExecutionContext&) : void
+  }
+  class AddTwosComplement {
+    # compute(a : uint8_t, b : uint8_t) : uint8_t
+  }
+  class AddFloat {
+    # compute(a : uint8_t, b : uint8_t) : uint8_t
+  }
+  class OrRegisters {
+    # compute(a : uint8_t, b : uint8_t) : uint8_t
+  }
+  class AndRegisters {
+    # compute(a : uint8_t, b : uint8_t) : uint8_t
+  }
+  class XorRegisters {
+    # compute(a : uint8_t, b : uint8_t) : uint8_t
+  }
+  class RotateRight {
+    - r : uint8_t
+    - times : uint8_t
+    + execute(ctx : ExecutionContext&) : void
+  }
+  class JumpIfEqual {
+    - r : uint8_t
+    - address : uint8_t
+    + execute(ctx : ExecutionContext&) : void
+  }
+  class Halt {
+    + execute(ctx : ExecutionContext&) : void
+  }
+
+  class InstructionDecoder <<factory>> {
+    + {static} decode(high : uint8_t, low : uint8_t) : std::unique_ptr<Instruction>
+    + {static} isValid(high : uint8_t, low : uint8_t) : bool
+  }
+
+  class "std::runtime_error" as RuntimeError <<std>>
+  class InvalidInstructionException {
+    + InvalidInstructionException(raw : uint16_t)
+  }
+}
+
+' ===================== LOADER =====================
+package "Loader" {
+  class ProgramLoader {
+    + load(filename : const std::string&, startAddress : uint8_t, memory : Memory&) : uint8_t
+    - parseFile(filename : const std::string&) : std::vector<uint16_t>
+    - parseLine(line : const std::string&) : std::optional<uint16_t>
+    - checkStartAddress(startAddress : uint8_t, wordCount : size_t) : void
+  }
+  class ProgramLoadException {
+    + ProgramLoadException(message : const std::string&)
+  }
+}
+
+' ===================== FACADE =====================
+class Machine <<facade>> {
+  - screen : Screen
+  - memory : Memory
+  - cpu : CPU
+  - loader : ProgramLoader
+  - programStart : uint8_t
+  + Machine()
+  + loadProgram(filename : const std::string&, startAddress : uint8_t) : void
+  + overwriteRegister(index : uint8_t, value : uint8_t) : void
+  + overwriteMemory(address : uint8_t, value : uint8_t) : void
+  + setPC(address : uint8_t) : void
+  + setPCToProgramStart() : void
+  + step() : bool
+  + runAll() : void
+  + isFinished() : bool
+  + getMemory() : const Memory&
+  + getCPU() : const CPU&
+  + getScreen() : const Screen&
+}
+
+' ===================== UI =====================
+package "UI" {
+  class ConsoleUI {
+    - machine : Machine&
+    - renderer : ConsoleRenderer
+    + ConsoleUI(machine : Machine&)
+    + start() : void
+    - showMenu() : void
+    - handleLoadProgram() : void
+    - handleOverwriteRegister() : void
+    - handleOverwriteMemory() : void
+    - handleSetPC() : void
+    - handleRun() : void
+    - runAllAtOnce() : void
+    - runStepByStep() : void
+    - askExitOrLoadAnother() : bool
+    - readHex(prompt : const std::string&) : uint8_t
+    - readLine(prompt : const std::string&) : std::string
+  }
+
+  class ConsoleRenderer {
+    + showState(machine : const Machine&) : void
+    + showMemory(memory : const Memory&) : void
+    + showRegisters(regs : const RegisterFile&) : void
+    + showPCAndIR(pc : uint8_t, ir : uint16_t) : void
+    + showScreen(screen : const Screen&) : void
+    + showMessage(text : const std::string&) : void
+    + showError(text : const std::string&) : void
+  }
+}
+
+' ===================== RELATIONSHIPS =====================
+' Ownership
+Machine "1" *-- "1" Screen
+Machine "1" *-- "1" Memory
+Machine "1" *-- "1" CPU
+Machine "1" *-- "1" ProgramLoader
+CPU "1" *-- "1" RegisterFile
+CPU "1" *-- "0..1" Instruction : current
+
+' Associations
+CPU "1" --> "1" Memory : reads / writes
+Memory "1" --> "1" Screen : prints when\naddress = FF
+
+' Interface realisation
+CPU ..|> ExecutionContext
+
+' Instruction hierarchy
+Instruction <|-- LoadFromMemory
+Instruction <|-- LoadImmediate
+Instruction <|-- StoreToMemory
+Instruction <|-- CopyRegister
+Instruction <|-- BinaryRegisterInstruction
+Instruction <|-- RotateRight
+Instruction <|-- JumpIfEqual
+Instruction <|-- Halt
+BinaryRegisterInstruction <|-- AddTwosComplement
+BinaryRegisterInstruction <|-- AddFloat
+BinaryRegisterInstruction <|-- OrRegisters
+BinaryRegisterInstruction <|-- AndRegisters
+BinaryRegisterInstruction <|-- XorRegisters
+
+' Dependencies
+Instruction ..> ExecutionContext : uses
+AddTwosComplement ..> ALU
+AddFloat ..> ALU
+OrRegisters ..> ALU
+AndRegisters ..> ALU
+XorRegisters ..> ALU
+RotateRight ..> ALU
+CPU ..> InstructionDecoder : decodes with
+InstructionDecoder ..> Instruction : creates
+InstructionDecoder ..> InvalidInstructionException : throws
+ProgramLoader ..> InstructionDecoder : validates with
+ProgramLoader ..> Memory : writes program to
+ProgramLoader ..> ProgramLoadException : throws
+
+' Exceptions
+RuntimeError <|-- InvalidInstructionException
+RuntimeError <|-- ProgramLoadException
+
+' UI
+ConsoleUI "1" --> "1" Machine
+ConsoleUI "1" *-- "1" ConsoleRenderer
+ConsoleRenderer ..> Machine : reads state of
+@enduml

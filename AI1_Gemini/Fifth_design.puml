@@ -1,0 +1,128 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam backgroundColor #FEFEFE
+skinparam linetype ortho
+skinparam nodesep 20
+skinparam ranksep 30
+
+package "UI & Application Layer" {
+  class UI {
+    + start()
+    - showMenu()
+    - handleLoadProgram()
+    - handleRun()
+  }
+
+  class Machine {
+    + loadProgram()
+    + runAll()
+    + runStep()
+    + overwriteRegister()
+    + overwriteMemory()
+    + getPC()
+    + getIR()
+    + getRegister()
+    + getMemory()
+    + getScreenOutput()
+    + isHalted()
+  }
+
+  class ProgramLoader {
+    {static} + load()
+    {static} - validateAddress()
+  }
+}
+
+package "Core Hardware Layer" {
+  class CPU {
+    + fetch()
+    + execute()
+    + step()
+    + reset()
+    + setPC()
+    + halt()
+    + isHalted()
+  }
+
+  class RegisterFile {
+    + write()
+    + read()
+  }
+
+  class ALU {
+    + addInt()
+    + addFloat()
+    + bitwiseOr()
+    + bitwiseAnd()
+    + bitwiseXor()
+    + rotateRight()
+  }
+
+  class Memory {
+    + write()
+    + read()
+    + clear()
+  }
+
+  class Screen {
+    + print()
+    + clear()
+    + getOutput()
+  }
+}
+
+package "Instruction Command Pattern" {
+  class InstructionFactory {
+    {static} + parse()
+  }
+
+  abstract class Instruction {
+    {abstract} + execute()
+    {abstract} + isHalt()
+  }
+
+  package "Concrete Instructions" {
+    class LoadMemInstruction
+    class LoadImmInstruction
+    class StoreMemInstruction
+    class MoveInstruction
+    class AddIntInstruction
+    class AddFloatInstruction
+    class BitwiseInstruction
+    class RotateInstruction
+    class JumpInstruction
+    class HaltInstruction
+  }
+}
+
+class InvalidInstructionException {
+  - message
+}
+
+' Architectural Relationships
+UI --> Machine
+Machine --> ProgramLoader : uses
+Machine *-- Memory
+Machine *-- Screen
+Machine *-- CPU
+CPU *-- RegisterFile
+CPU *-- ALU
+Memory --> Screen : writes to FF
+
+ProgramLoader ..> InstructionFactory : uses
+ProgramLoader ..> InvalidInstructionException : throws
+CPU ..> InstructionFactory : uses
+CPU ..> Instruction : executes
+
+Instruction <|-- LoadMemInstruction
+Instruction <|-- LoadImmInstruction
+Instruction <|-- StoreMemInstruction
+Instruction <|-- MoveInstruction
+Instruction <|-- AddIntInstruction
+Instruction <|-- AddFloatInstruction
+Instruction <|-- BitwiseInstruction
+Instruction <|-- RotateInstruction
+Instruction <|-- JumpInstruction
+Instruction <|-- HaltInstruction
+
+@enduml
