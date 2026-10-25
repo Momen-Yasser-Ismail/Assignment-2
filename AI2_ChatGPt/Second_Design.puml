@@ -1,0 +1,200 @@
+@startuml
+left to right direction
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+
+package "Machine Core" {
+  class Machine {
+    - memory: Memory
+    - cpu: CPU
+    - screen: ScreenOutput
+    - loader: ProgramLoader
+    + loadProgram(filename: string, startAddress: Address): LoadResult
+    + overwriteRegister(index: RegisterIndex, value: Byte): void
+    + overwriteMemory(address: Address, value: Byte): void
+    + setProgramCounter(address: Address): void
+    + step(): StepResult
+    + isHalted(): bool
+    + getSnapshot(): MachineSnapshot
+    + reset(): void
+  }
+
+  class Memory {
+    - cells: Byte[256]
+    - screen: ScreenOutput
+    + read(address: Address): Byte
+    + write(address: Address, value: Byte): void
+    + clear(): void
+    + snapshot(): Byte[256]
+  }
+
+  class RegisterFile {
+    - registers: Byte[16]
+    + read(index: RegisterIndex): Byte
+    + write(index: RegisterIndex, value: Byte): void
+    + clear(): void
+    + snapshot(): Byte[16]
+  }
+
+  class CPU {
+    - programCounter: Address
+    - instructionRegister: InstructionWord
+    - registers: RegisterFile
+    - memory: Memory
+    - decoder: InstructionDecoder
+    - alu: ALU
+    - halted: bool
+    + step(): StepResult
+    + setProgramCounter(address: Address): void
+    + getProgramCounter(): Address
+    + getInstructionRegister(): InstructionWord
+    + isHalted(): bool
+    + reset(): void
+  }
+
+  class ALU {
+    + addInteger(a: Byte, b: Byte): Byte
+    + addFloatingPoint(a: Byte, b: Byte): Byte
+    + bitwiseOr(a: Byte, b: Byte): Byte
+    + bitwiseAnd(a: Byte, b: Byte): Byte
+    + bitwiseXor(a: Byte, b: Byte): Byte
+    + rotateRight(value: Byte, count: Nibble): Byte
+  }
+
+  class ScreenOutput {
+    - output: string
+    + write(value: Byte): void
+    + clear(): void
+    + getText(): string
+  }
+}
+
+package "Instructions and Loading" {
+  class InstructionDecoder {
+    + decode(word: InstructionWord): DecodeResult
+    + isValid(word: InstructionWord): bool
+  }
+
+  class Instruction {
+    + opcode: Opcode
+    + r: RegisterIndex
+    + s: RegisterIndex
+    + t: RegisterIndex
+    + xy: Byte
+    + rotationCount: Nibble
+  }
+
+  class ProgramLoader {
+    - decoder: InstructionDecoder
+    + load(filename: string, startAddress: Address, memory: Memory): LoadResult
+    - parseLine(line: string): ParseResult
+    - validateProgram(words: InstructionWord[]): ValidationResult
+  }
+
+  enum Opcode {
+    LOAD_FROM_MEMORY
+    LOAD_IMMEDIATE
+    STORE
+    MOVE
+    ADD_INTEGER
+    ADD_FLOATING_POINT
+    OR
+    AND
+    XOR
+    ROTATE_RIGHT
+    JUMP_IF_EQUAL_TO_REGISTER_ZERO
+    HALT
+  }
+}
+
+package "User Interface" {
+  class ConsoleUI {
+    - machine: Machine
+    + start(): void
+    - showMenu(): MenuChoice
+    - loadProgram(): void
+    - editRegister(): void
+    - editMemory(): void
+    - runProgram(): void
+    - runAll(): void
+    - runStepByStep(): void
+    - displaySnapshot(snapshot: MachineSnapshot): void
+    - waitForEnter(): void
+    - askExitOrLoadAnother(): bool
+  }
+
+  enum MenuChoice {
+    LOAD_PROGRAM
+    EDIT_REGISTER
+    EDIT_MEMORY
+    DISPLAY_STATE
+    RUN
+    EXIT
+  }
+}
+
+package "Value Objects" {
+  class MachineSnapshot <<value object>> {
+    + memory: Byte[256]
+    + programCounter: Address
+    + instructionRegister: InstructionWord
+    + registers: Byte[16]
+    + screenText: string
+    + halted: bool
+  }
+
+  class StepResult <<value object>> {
+    + success: bool
+    + halted: bool
+    + errorMessage: string
+  }
+
+  class LoadResult <<value object>> {
+    + success: bool
+    + instructionsLoaded: int
+    + errorMessage: string
+  }
+
+  class DecodeResult <<value object>> {
+    + success: bool
+    + instruction: Instruction
+    + errorMessage: string
+  }
+
+  class ParseResult <<value object>> {
+    + success: bool
+    + word: InstructionWord
+    + errorMessage: string
+  }
+
+  class ValidationResult <<value object>> {
+    + success: bool
+    + errorMessage: string
+  }
+}
+
+' Ownership and associations
+Machine "1" *-- "1" Memory : owns
+Machine "1" *-- "1" CPU : owns
+Machine "1" *-- "1" ScreenOutput : owns
+Machine "1" *-- "1" ProgramLoader : owns
+
+CPU "1" *-- "1" RegisterFile : owns
+CPU "1" *-- "1" InstructionDecoder : owns
+CPU "1" *-- "1" ALU : owns
+CPU "1" --> "1" Memory : uses
+Memory "1" --> "1" ScreenOutput : forwards writes to FF
+ProgramLoader "1" --> "1" InstructionDecoder : validates with
+ConsoleUI "1" --> "1" Machine : controls
+
+' Dependencies and result/value relationships
+InstructionDecoder ..> Instruction : creates
+InstructionDecoder ..> DecodeResult : returns
+ProgramLoader ..> ParseResult : uses
+ProgramLoader ..> ValidationResult : uses
+ProgramLoader ..> LoadResult : returns
+CPU ..> StepResult : returns
+Machine ..> MachineSnapshot : creates
+ConsoleUI ..> MachineSnapshot : displays
+
+@enduml
