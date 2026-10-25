@@ -1,0 +1,213 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam backgroundColor #FEFEFE
+skinparam linetype ortho
+
+package "UI & Coordination Layer" {
+  class UI {
+    - Machine machine
+    + void start()
+    - void showMenu()
+    - void handleLoadProgram()
+    - void handleManualOverride()
+    - void handleRun()
+    - void displayMemoryTable() const
+    - void displayRegisters() const
+    - void displayScreen() const
+  }
+
+  class Machine {
+    - Memory memory
+    - Screen screen
+    - CPU cpu
+    + bool loadProgram(const std::string& filename, uint16_t startAddress)
+    + void runAll()
+    + void runStep()
+    + void overwriteRegister(uint8_t index, uint8_t value)
+    + void overwriteMemory(uint8_t address, uint8_t value)
+    + uint16_t getPC() const
+    + uint16_t getIR() const
+    + uint8_t getRegister(uint8_t index) const
+    + const Memory& getMemory() const
+    + std::string getScreenOutput() const
+    + bool isHalted() const
+  }
+
+  class ProgramLoader {
+    {static} + void load(const std::string& filename, uint16_t startAddress, Memory& memory)
+    {static} - void validateAddress(uint16_t address)
+  }
+}
+
+package "Core Hardware Layer" {
+  class CPU {
+    - uint16_t programCounter
+    - uint16_t instructionRegister
+    - RegisterFile registerFile
+    - ALU alu
+    - bool halted
+    + void fetch(const Memory& memory)
+    + void execute(const Instruction& instr, Memory& memory)
+    + void step(Memory& memory)
+    + void reset(uint16_t startAddress)
+    + void setPC(uint16_t address)
+    + void halt()
+    + bool isHalted() const
+    + uint16_t getPC() const
+    + uint16_t getIR() const
+    + RegisterFile& getRegisterFile()
+    + ALU& getALU()
+  }
+
+  class RegisterFile {
+    - uint8_t registers[16]
+    + void write(uint8_t index, uint8_t value)
+    + uint8_t read(uint8_t index) const
+    + void clear()
+  }
+
+  class ALU {
+    + uint8_t addInt(uint8_t a, uint8_t b) const
+    + uint8_t addFloat(uint8_t a, uint8_t b) const
+    + uint8_t bitwiseOr(uint8_t a, uint8_t b) const
+    + uint8_t bitwiseAnd(uint8_t a, uint8_t b) const
+    + uint8_t bitwiseXor(uint8_t a, uint8_t b) const
+    + uint8_t rotateRight(uint8_t value, int times) const
+  }
+
+  class Memory {
+    - uint8_t cells[256]
+    - Screen* screen
+    + void setScreen(Screen* screenPtr)
+    + void write(uint8_t address, uint8_t value)
+    + uint8_t read(uint8_t address) const
+    + void clear()
+    + const uint8_t* getRawMemory() const
+  }
+
+  class Screen {
+    - std::string outputBuffer
+    + void print(uint8_t value)
+    + void clear()
+    + std::string getOutput() const
+  }
+}
+
+package "Instruction Hierarchy & Command Pattern" {
+  class InstructionFactory {
+    {static} + std::unique_ptr<Instruction> parse(uint16_t rawBytes)
+  }
+
+  abstract class Instruction {
+    + {abstract} void execute(CPU& cpu, Memory& memory) const = 0
+    + {abstract} bool isHalt() const
+    + virtual ~Instruction() = default
+  }
+
+  class LoadMemInstruction {
+    - uint8_t r
+    - uint8_t xy
+    + void execute(CPU& cpu, Memory& memory) const override
+    + bool isHalt() const override
+  }
+
+  class LoadImmInstruction {
+    - uint8_t r
+    - uint8_t xy
+    + void execute(CPU& cpu, Memory& memory) const override
+    + bool isHalt() const override
+  }
+
+  class StoreMemInstruction {
+    - uint8_t r
+    - uint8_t xy
+    + void execute(CPU& cpu, Memory& memory) const override
+    + bool isHalt() const override
+  }
+
+  class MoveInstruction {
+    - uint8_t r
+    - uint8_t s
+    + void execute(CPU& cpu, Memory& memory) const override
+    + bool isHalt() const override
+  }
+
+  class AddIntInstruction {
+    - uint8_t r
+    - uint8_t s
+    - uint8_t t
+    + void execute(CPU& cpu, Memory& memory) const override
+    + bool isHalt() const override
+  }
+
+  class AddFloatInstruction {
+    - uint8_t r
+    - uint8_t s
+    - uint8_t t
+    + void execute(CPU& cpu, Memory& memory) const override
+    + bool isHalt() const override
+  }
+
+  class BitwiseInstruction {
+    - uint8_t opcode
+    - uint8_t r
+    - uint8_t s
+    - uint8_t t
+    + void execute(CPU& cpu, Memory& memory) const override
+    + bool isHalt() const override
+  }
+
+  class RotateInstruction {
+    - uint8_t r
+    - uint8_t x
+    + void execute(CPU& cpu, Memory& memory) const override
+    + bool isHalt() const override
+  }
+
+  class JumpInstruction {
+    - uint8_t r
+    - uint8_t xy
+    + void execute(CPU& cpu, Memory& memory) const override
+    + bool isHalt() const override
+  }
+
+  class HaltInstruction {
+    + void execute(CPU& cpu, Memory& memory) const override
+    + bool isHalt() const override
+  }
+}
+
+class InvalidInstructionException {
+  - std::string message
+  + InvalidInstructionException(std::string msg)
+  + const char* what() const noexcept
+}
+
+' Relationships & Associations
+UI --> Machine : uses
+Machine --> ProgramLoader : uses
+Machine *-- "1" Memory : owns (256 cells)
+Machine *-- "1" Screen : owns
+Machine *-- "1" CPU : owns
+CPU *-- "1" RegisterFile : owns (16 registers)
+CPU *-- "1" ALU : owns
+Memory --> Screen : writes to FF >
+
+ProgramLoader ..> InstructionFactory : uses
+ProgramLoader ..> InvalidInstructionException : throws
+CPU ..> InstructionFactory : uses
+CPU ..> Instruction : executes
+
+' Inheritance Hierarchy
+Instruction <|-- LoadMemInstruction
+Instruction <|-- LoadImmInstruction
+Instruction <|-- StoreMemInstruction
+Instruction <|-- MoveInstruction
+Instruction <|-- AddIntInstruction
+Instruction <|-- AddFloatInstruction
+Instruction <|-- BitwiseInstruction
+Instruction <|-- RotateInstruction
+Instruction <|-- JumpInstruction
+Instruction <|-- HaltInstruction
+
+@enduml
