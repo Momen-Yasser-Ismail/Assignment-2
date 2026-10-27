@@ -1,0 +1,13 @@
+; -------------------------------------------------------------
+; Vole Machine Program
+; Purpose: Perform AND and OR operations on two values and
+; display the results on the screen.
+; -------------------------------------------------------------
+
+20F0    ; Load immediate value F0 into register 0
+213C    ; Load immediate value 3C into register 1
+8201    ; AND registers 0 and 1, put result in register 2
+32FF    ; Store register 2 into memory[FF] (screen output)
+7301    ; OR registers 0 and 1, put result in register 3
+33FF    ; Store register 3 into memory[FF] (screen output)
+C000    ; Halt

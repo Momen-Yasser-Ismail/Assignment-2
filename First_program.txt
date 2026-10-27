@@ -1,0 +1,13 @@
+; -------------------------------------------------------------
+; Vole Machine Program
+; Purpose: Load two numbers (10 and 5), add them, subtract 1,
+; and display the result (14) on the screen.
+; -------------------------------------------------------------
+
+200A    ; Load immediate value 0A into register 0
+2105    ; Load immediate value 05 into register 1
+5201    ; Add registers 0 and 1, put result in register 2
+23FF    ; Load immediate value FF into register 3
+5223    ; Add registers 2 and 3, put result in register 2
+32FF    ; Store register 2 into memory[FF] (screen output)
+C000    ; Halt

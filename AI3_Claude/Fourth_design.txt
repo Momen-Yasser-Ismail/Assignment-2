@@ -1,0 +1,61 @@
+@startuml VoleMachineSimple
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+hide empty members
+
+class Memory {
+  - cells  uint8_t[256]
+  - screenOutput  string
+  + read(address  uint8_t)  uint8_t
+  + write(address  uint8_t, value  uint8_t)  void
+  + getScreenOutput()  string
+  + clear()  void
+}
+
+class CPU {
+  - pc  uint8_t
+  - ir  uint16_t
+  - registers  uint8_t[16]
+  - halted  bool
+  + CPU(memory  Memory&)
+  + step()  void
+  + isValid(ir  uint16_t)  bool
+  + getPC()  uint8_t
+  + setPC(address  uint8_t)  void
+  + getIR()  uint16_t
+  + getRegister(index  uint8_t)  uint8_t
+  + setRegister(index  uint8_t, value  uint8_t)  void
+  + isHalted()  bool
+  - fetch()  void
+  - execute()  void
+}
+
+class Machine {
+  - programStart  uint8_t
+  + loadProgram(filename  string, startAddress  uint8_t)  bool
+  + run()  void
+  + runStep()  bool
+  + overwriteRegister(index  uint8_t, value  uint8_t)  void
+  + overwriteMemory(address  uint8_t, value  uint8_t)  void
+  + setPCToStart()  void
+}
+
+class UI {
+  + start()  void
+  - showMenu()  void
+  - displayMemory()  void
+  - displayRegisters()  void
+  - displayScreen()  void
+}
+
+Machine 1 -- 1 Memory
+Machine 1 -- 1 CPU
+CPU 1 -- 1 Memory  reads  writes
+UI 1 -- 1 Machine  uses
+
+note right of Memory
+  Writing to address FF
+  also adds the byte to
+  screenOutput (the screen).
+end note
+@enduml

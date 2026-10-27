@@ -1,0 +1,99 @@
+@startuml VoleMachineSimple
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+hide empty members
+
+class Instruction {
+  - raw : uint16_t
+  + Instruction(high : uint8_t, low : uint8_t)
+  + getOpcode() : uint8_t
+  + getR() : uint8_t
+  + getS() : uint8_t
+  + getT() : uint8_t
+  + getXY() : uint8_t
+  + getRaw() : uint16_t
+  + isValid() : bool
+  + toString() : std::string
+}
+
+class Memory {
+  + {static} SIZE : size_t = 256
+  + {static} SCREEN_ADDRESS : uint8_t = 0xFF
+  - cells : std::array<uint8_t, 256>
+  - screenOutput : std::string
+  + read(address : uint8_t) : uint8_t
+  + write(address : uint8_t, value : uint8_t) : void
+  + getScreenOutput() : const std::string&
+  + clear() : void
+}
+
+class CPU {
+  - pc : uint8_t
+  - ir : Instruction
+  - registers : std::array<uint8_t, 16>
+  - halted : bool
+  - memory : Memory&
+  + CPU(memory : Memory&)
+  + setPC(address : uint8_t) : void
+  + getPC() : uint8_t
+  + getIR() : const Instruction&
+  + getRegister(index : uint8_t) : uint8_t
+  + setRegister(index : uint8_t, value : uint8_t) : void
+  + isHalted() : bool
+  + step() : void
+  + reset() : void
+  - fetch() : void
+  - execute(inst : const Instruction&) : void
+  - addFloat(a : uint8_t, b : uint8_t) : uint8_t
+  - rotateRight(value : uint8_t, times : uint8_t) : uint8_t
+}
+
+class Machine {
+  - memory : Memory
+  - cpu : CPU
+  - programStart : uint8_t
+  + Machine()
+  + loadProgram(filename : const std::string&, startAddress : uint8_t) : void
+  + overwriteMemory(address : uint8_t, value : uint8_t) : void
+  + overwriteRegister(index : uint8_t, value : uint8_t) : void
+  + setPCToProgramStart() : void
+  + step() : bool
+  + runAll() : void
+  + isFinished() : bool
+  + getMemory() : const Memory&
+  + getCPU() : const CPU&
+  - parseLine(line : const std::string&) : std::optional<uint16_t>
+}
+
+class UI {
+  - machine : Machine&
+  + UI(machine : Machine&)
+  + start() : void
+  - showMenu() : void
+  - displayState() : void
+  - displayMemory() : void
+  - displayRegisters() : void
+  - displayScreen() : void
+  - runAllAtOnce() : void
+  - runStepByStep() : void
+  - askExitOrLoadAnother() : bool
+}
+
+Machine "1" *-- "1" Memory
+Machine "1" *-- "1" CPU
+CPU "1" --> "1" Memory : reads / writes
+CPU "1" *-- "1" Instruction : IR
+Machine ..> Instruction : validates\nwhile loading
+UI "1" --> "1" Machine : uses
+
+note right of Memory
+  Writing to address FF
+  appends the byte to screenOutput
+  (memory-mapped screen).
+end note
+
+note bottom of CPU
+  Errors are reported with
+  std::runtime_error.
+end note
+@enduml

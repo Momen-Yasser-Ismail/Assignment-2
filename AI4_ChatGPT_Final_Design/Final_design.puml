@@ -1,0 +1,140 @@
+
+@startuml VoleMachineSimple
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam defaultFontName Arial
+hide empty members
+
+title Vole Machine Simulator - Four-Class Architecture
+
+class Memory {
+  - cells : uint8_t[256]
+  - screenOutput : string
+
+  + read(address : uint8_t) : uint8_t
+  + write(address : uint8_t, value : uint8_t) : void
+  + getCells() : const uint8_t*
+  + getScreenOutput() : string
+  + clear() : void
+}
+
+class CPU {
+  - pc : uint8_t
+  - ir : uint16_t
+  - registers : uint8_t[16]
+  - halted : bool
+  - memory : Memory&
+
+  + CPU(memory : Memory&)
+  + step() : void
+  + isValid(ir : uint16_t) : bool
+  + getPC() : uint8_t
+  + setPC(address : uint8_t) : void
+  + getIR() : uint16_t
+  + getRegister(index : uint8_t) : uint8_t
+  + setRegister(index : uint8_t, value : uint8_t) : void
+  + isHalted() : bool
+
+  - fetch() : bool
+  - execute() : void
+}
+
+class Machine {
+  - memory : Memory
+  - cpu : CPU
+  - programStart : uint8_t
+
+  + loadProgram(filename : string, startAddress : uint8_t) : bool
+  + run() : void
+  + runStep() : bool
+
+  + getPC() : uint8_t
+  + getIR() : uint16_t
+  + getRegister(index : uint8_t) : uint8_t
+  + getRegisters() : const uint8_t*
+  + getMemoryCell(address : uint8_t) : uint8_t
+  + getMemoryCells() : const uint8_t*
+  + getScreenOutput() : string
+  + isHalted() : bool
+
+  + overwriteRegister(index : uint8_t, value : uint8_t) : void
+  + overwriteMemory(address : uint8_t, value : uint8_t) : void
+  + setPCToStart() : void
+}
+
+class UI {
+  + start() : void
+
+  - showMenu() : void
+  - displayMemory() : void
+  - displayRegisters() : void
+  - displayScreen() : void
+}
+
+Machine "1" *-- "1" Memory : owns
+Machine "1" *-- "1" CPU : owns
+
+CPU "1" --> "1" Memory : reads / writes
+
+UI "1" --> "1" Machine : uses Facade
+
+note right of Memory
+  Memory capacity: 256 bytes (0x00-0xFF).
+
+  Address 0xFF is the screen output port.
+  Writing to 0xFF synchronizes screenOutput
+  with the written byte.
+
+  clear() resets all cells and screenOutput.
+
+  getCells() returns a read-only pointer
+  to the internal memory array.
+end note
+
+note right of CPU
+  Instruction fetch:
+  1. Validate PC and PC + 1.
+  2. Read two consecutive bytes.
+  3. Combine them into a 16-bit IR.
+  4. Advance PC by 2 only after a valid fetch.
+
+  Prevent out-of-bounds access and
+  unintended address wraparound.
+
+  step() fetches and executes one instruction
+  unless the CPU is halted or fetch fails.
+end note
+
+note right of Machine
+  Machine is the public Facade for UI.
+
+  Loading validation:
+  - startAddress must be even.
+  - startAddress must be < 0xFF.
+  - The entire program must fit in memory.
+  - Reject invalid input before modifying memory.
+
+  runStep() delegates one execution step.
+  run() executes until halt or a defined
+  execution failure condition.
+
+  getRegisters() and getMemoryCells()
+  expose read-only views for rendering.
+end note
+
+note right of UI
+  UI communicates only through Machine.
+
+  Responsibilities:
+  - Menu and user input.
+  - Memory matrix rendering.
+  - Register and PC/IR display.
+  - Screen output display.
+
+  No direct access to CPU or Memory.
+end note
+
+@enduml
