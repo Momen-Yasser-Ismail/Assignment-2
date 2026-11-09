@@ -99,6 +99,3 @@ C000    ; HALT execution
 
 ---
 
-## 📜 Author & License
-
-Created by **Momen Yasser Ismail**. Developed for Educational Computer Architecture & OOP Assignments.
