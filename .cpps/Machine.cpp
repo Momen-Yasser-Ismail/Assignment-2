@@ -6,9 +6,9 @@ Machine::Machine()
 bool Machine::loadProgram(const std::string& filename, std::uint8_t startAddress) {
     cpu_.setHalted(false);
     
-    // Clear screen buffers and memory cell 0xFF so old output doesn't persist
+    // Clear memory (which resets screenoutput to "") and screen buffers[cite: 32]
+    memory_.clear();
     screen_.clear();
-    memory_.write(0xFF, 0x00);
     
     loader_.load(filename, startAddress, memory_);
     
@@ -20,10 +20,6 @@ bool Machine::loadProgram(const std::string& filename, std::uint8_t startAddress
 
 void Machine::run() {
     cpu_.setHalted(false);
-    
-    // Clear screen right when execution begins
-    screen_.clear();
-    memory_.write(0xFF, 0x00);
     
     while (!cpu_.isHalted()) {
         cpu_.step();
@@ -45,7 +41,7 @@ void Machine::resetAll() {
         cpu_.setRegister(static_cast<std::uint8_t>(i), 0);
     }
     programStart_ = 0;
-    programLoaded_ = false; // Reset the program loaded state
+    programLoaded_ = false; 
 }
 
 void Machine::overwriteRegister(std::uint8_t index, std::uint8_t value) {
