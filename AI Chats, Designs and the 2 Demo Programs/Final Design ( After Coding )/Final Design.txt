@@ -1,0 +1,117 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam backgroundColor #1e1e1e
+skinparam defaultFontColor #d4d4d4
+skinparam classBackgroundColor #2d2d2d
+skinparam classBorderColor #007acc
+skinparam arrowColor #9cdcfe
+
+class ALU {
+    + {static} addinteger(a: uint8_t, b: uint8_t): uint8_t
+    + {static} addFloatingpoint(a: uint8_t, b: uint8_t): uint8_t
+    + {static} And(a: uint8_t, b: uint8_t): uint8_t
+    + {static} Or(a: uint8_t, b: uint8_t): uint8_t
+    + {static} Xor(a: uint8_t, b: uint8_t): uint8_t
+    + {static} rotateRight(value: uint8_t, steps: uint8_t): uint8_t
+}
+
+class Screen {
+    // Manages screen display buffer
+}
+
+class Memory {
+    - cells: uint8_t[256]
+    - screenoutput: std::string
+    + Memory()
+    + read(address: uint8_t): uint8_t
+    + write(address: uint8_t, value: uint8_t): void
+    + getCells() const: const uint8_t*
+    + getScreenOutput() const: std::string
+    + clear(): void
+}
+
+class CPU {
+    - pc: uint8_t
+    - ir: uint16_t
+    - registers: uint8_t[16]
+    - halted: bool
+    - memory: Memory&
+    + CPU(memory: Memory&)
+    + fetch(): bool
+    + execute(): void
+    + isValid(ir: uint16_t): bool
+    + getPC() const: uint8_t
+    + getIR() const: uint16_t
+    + getRegister(index: uint8_t) const: uint8_t
+    + getRegisters() const: const uint8_t*
+    + isHalted() const: bool
+    + setPC(address: uint8_t): void
+    + setHalted(h: bool): void
+    + step(): void
+    + setRegister(index: uint8_t, value: uint8_t): void
+}
+
+class ProgramLoader {
+    + load(filename: const std::string&, startAddress: uint8_t, memory: Memory&) const: bool
+}
+
+class Machine {
+    - screen_: Screen
+    - memory_: Memory
+    - cpu_: CPU
+    - loader_: ProgramLoader
+    - programStart_: uint8_t
+    - programLoaded_: bool
+    + Machine()
+    + loadProgram(filename: const std::string&, startAddress: uint8_t): bool
+    + run(): void
+    + runStep(): bool
+    + resetAll(): void
+    + setProgramLoaded(loaded: bool): void
+    + isProgramLoaded() const: bool
+    + overwriteRegister(index: uint8_t, value: uint8_t): void
+    + overwriteMemory(address: uint8_t, value: uint8_t): void
+    + setPCToStart(): void
+    + getPC() const: uint8_t
+    + getIR() const: uint16_t
+    + getRegister(index: uint8_t) const: uint8_t
+    + getRegisters() const: const uint8_t*
+    + getMemoryCell(address: uint8_t) const: uint8_t
+    + getMemoryCells() const: const uint8_t*
+    + getScreenOutput() const: std::string
+    + isHalted() const: bool
+}
+
+class ConsoleRenderer {
+    + displayMemory(machine: const Machine&) const: void
+    + displayRegisters(machine: const Machine&) const: void
+    + displayCPU(machine: const Machine&) const: void
+    + displayScreen(machine: const Machine&) const: void
+}
+
+class ConsoleUI {
+    - machine: Machine&
+    - renderer: ConsoleRenderer
+    + explicit ConsoleUI(machine: Machine&)
+    + start(): void
+    - showMenu() const: void
+    - handleLoadProgram(): void
+    - handleRun(): void
+    - handleStep(): void
+    - displayMemory() const: void
+    - displayRegisters() const: void
+    - displayCPU() const: void
+    - displayScreen() const: void
+    - displayAll() const: void
+}
+
+Machine *-- Screen : owns
+Machine *-- Memory : owns
+Machine *-- CPU : owns
+Machine *-- ProgramLoader : owns
+CPU --> Memory : references
+ConsoleUI --> Machine : controls
+ConsoleUI --> ConsoleRenderer : uses
+ConsoleRenderer ..> Machine : inspects
+CPU ..> ALU : uses
+@enduml
