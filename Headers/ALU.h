@@ -1,17 +1,18 @@
-#include<cstdint>
+#pragma once
+#ifndef ALU_H
+#define ALU_H
+
+#include <cstdint>
 
 class ALU
 {
     public:
-        static uint8_t addinteger(uint8_t a, uint8_t b);
-
-        static uint8_t addFloatingpoint(uint8_t a, uint8t_t b);
-
-        static uint8_t And(uint8_t a, uint8_t b);
-
-        static uint8_t Or(uint8_t a, uint8_t b);
-
-        static uint8_t Xor(uint8_t a, uint8_t b);
-        
-        static uint8_t rotateRight(uint8_t value, uint8_t steps);
+        static std::uint8_t addinteger(std::uint8_t a, std::uint8_t b);
+        static std::uint8_t addFloatingpoint(std::uint8_t a, std::uint8_t b);
+        static std::uint8_t And(std::uint8_t a, std::uint8_t b);
+        static std::uint8_t Or(std::uint8_t a, std::uint8_t b);
+        static std::uint8_t Xor(std::uint8_t a, std::uint8_t b);
+        static std::uint8_t rotateRight(std::uint8_t value, std::uint8_t steps);
 };
+
+#endif

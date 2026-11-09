@@ -1,22 +1,27 @@
+#pragma once
+#ifndef MEMORY_H
+#define MEMORY_H
+
 #include <iostream>
 #include <vector>
 #include <string>
 #include <cstdint>
-using namespace std;
 
 class Memory
 {
 private:
-    uint8_t cells[256];
-    string screenoutput;
+    std::uint8_t cells[256];
+    std::string screenoutput;
 
 public:
     Memory();
 
-    uint8_t read(uint8_t address);
-    void write(uint8_t address, uint8_t value);
+    std::uint8_t read(std::uint8_t address);
+    void write(std::uint8_t address, std::uint8_t value);
 
-    const uint8_t *getCells() const;
-    string getScreenOutput() const;
+    const std::uint8_t *getCells() const;
+    std::string getScreenOutput() const;
     void clear();
 };
+
+#endif

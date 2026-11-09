@@ -1,4 +1,4 @@
-#include "ConsoleUI.h"
+#include "../Headers/ConsoleUI.h"
 
 #include <exception>
 #include <iostream>
@@ -56,6 +56,12 @@ void ConsoleUI::handleLoadProgram() {
 }
 
 void ConsoleUI::handleRun() {
+    // Safety Net: Do not execute if no valid program has been loaded
+    if (!machine.isProgramLoaded()) {
+        std::cout << "Execution error: No valid program loaded into memory. Please load a program first.\n";
+        return;
+    }
+
     try {
         machine.run();
         std::cout << "Program execution finished.\n";
@@ -66,6 +72,12 @@ void ConsoleUI::handleRun() {
 }
 
 void ConsoleUI::handleStep() {
+    // Safety Net: Do not step if no valid program has been loaded
+    if (!machine.isProgramLoaded()) {
+        std::cout << "Step error: No valid program loaded into memory. Please load a program first.\n";
+        return;
+    }
+
     if (machine.isHalted()) {
         std::cout << "CPU is halted. Reset or load a program first.\n";
         return;

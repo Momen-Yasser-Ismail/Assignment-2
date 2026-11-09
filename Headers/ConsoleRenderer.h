@@ -1,9 +1,9 @@
-#ifndef ConsoleRenderer_H
-#define ConsoleRenderer_H
+#pragma once
+#ifndef CONSOLE_RENDERER_H
+#define CONSOLE_RENDERER_H
 
-class Machine; // forward declaration of Machine class will be used later.
+class Machine;
 
-// Rendering only: this class reads Machine's public getters and never changes state.
 class ConsoleRenderer {
 public:
     void displayMemory(const Machine& machine) const;

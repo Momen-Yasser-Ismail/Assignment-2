@@ -1,5 +1,5 @@
-#include "Machine.h"
-#include "ConsoleUI.h" // (Or whatever your UI header is named)
+#include "../Headers/Machine.h"
+#include "../Headers/ConsoleUI.h"
 
 int main() {
     Machine machine;

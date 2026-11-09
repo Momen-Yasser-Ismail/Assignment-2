@@ -1,31 +1,32 @@
-#include "Memory.h"
+#include "../Headers/Memory.h"
+#include "../Headers/Hex.h"
 
 Memory::Memory()
 {
     clear();
 }
 
-uint8_t Memory::read(uint8_t address)
+std::uint8_t Memory::read(std::uint8_t address)
 {
     return cells[address];
 }
 
-void Memory::write(uint8_t address, uint8_t value)
+void Memory::write(std::uint8_t address, std::uint8_t value)
 {
     cells[address] = value;
 
     if (address == 0xFF)
     {
-        screenoutput += static_cast<char>(value);
+        screenoutput += toHex(value, 2);
     }
 }
 
-const uint8_t *Memory::getCells() const
+const std::uint8_t *Memory::getCells() const
 {
     return cells;
 }
 
-string Memory::getScreenOutput() const
+std::string Memory::getScreenOutput() const
 {
     return screenoutput;
 }

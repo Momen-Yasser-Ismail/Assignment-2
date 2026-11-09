@@ -1,16 +1,20 @@
-#include <iostream>
-using namespace std;
+#pragma once
+#ifndef REGISTER_FILE_H
 #include <cstdint>
+#include <iostream>
 
 class RegisterFile 
 {
-    private:
-        uint8_t registers[16];
+private:
+    std::uint8_t registers[16];
 
-    public:
-        RegisterFile();
+public:
+    RegisterFile();
 
-        uint8_t getRegister(uint8_t index) const;
-        void setRegister(uint8_t index, uint8_t value);
-        void clear();
+    std::uint8_t getRegister(std::uint8_t index) const;
+    void setRegister(std::uint8_t index, std::uint8_t value);
+    const std::uint8_t* getRegisters() const;
+    void clear();
 };
+
+#endif

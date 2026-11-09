@@ -1,6 +1,6 @@
-#include "ConsoleRenderer.h"
-#include "Machine.h"
-#include "Hex.h"
+#include "../Headers/ConsoleRenderer.h"
+#include "../Headers/Machine.h"
+#include "../Headers/Hex.h"
 
 #include <cstdint>
 #include <iostream>
