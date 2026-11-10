@@ -1,6 +1,4 @@
 #pragma once
-#ifndef CPU_H
-#define CPU_H
 
 #include <cstdint>
 #include "Memory.h"
@@ -30,5 +28,3 @@ public:
     void step();
     void setRegister(std::uint8_t index, std::uint8_t value);
 };
-
-#endif

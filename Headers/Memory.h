@@ -1,6 +1,4 @@
 #pragma once
-#ifndef MEMORY_H
-#define MEMORY_H
 
 #include <iostream>
 #include <vector>
@@ -23,5 +21,3 @@ public:
     std::string getScreenOutput() const;
     void clear();
 };
-
-#endif

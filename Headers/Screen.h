@@ -1,6 +1,4 @@
 #pragma once
-#ifndef SCREEN_H
-#define SCREEN_H
 
 #include <string>
 
@@ -14,5 +12,3 @@ public:
     void write(char c);
     std::string getContent() const;
 };
-
-#endif

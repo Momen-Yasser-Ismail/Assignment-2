@@ -1,6 +1,4 @@
 #pragma once
-#ifndef EXCEPTIONS_H
-#define EXCEPTIONS_H
 
 #include <cstdint>
 #include <stdexcept>
@@ -27,5 +25,3 @@ private:
         return message;
     }
 };
-
-#endif

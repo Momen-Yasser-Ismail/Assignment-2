@@ -1,6 +1,4 @@
 #pragma once
-#ifndef CONSOLE_UI_H
-#define CONSOLE_UI_H
 
 #include "Machine.h"
 #include "ConsoleRenderer.h"
@@ -25,5 +23,3 @@ private:
     void displayScreen() const;
     void displayAll() const;
 };
-
-#endif

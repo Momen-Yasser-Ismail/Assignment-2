@@ -1,6 +1,4 @@
 #pragma once
-#ifndef CONSOLE_RENDERER_H
-#define CONSOLE_RENDERER_H
 
 class Machine;
 
@@ -11,5 +9,3 @@ public:
     void displayCPU(const Machine& machine) const;
     void displayScreen(const Machine& machine) const;
 };
-
-#endif

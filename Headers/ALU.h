@@ -1,6 +1,4 @@
 #pragma once
-#ifndef ALU_H
-#define ALU_H
 
 #include <cstdint>
 
@@ -14,5 +12,3 @@ class ALU
         static std::uint8_t Xor(std::uint8_t a, std::uint8_t b);
         static std::uint8_t rotateRight(std::uint8_t value, std::uint8_t steps);
 };
-
-#endif

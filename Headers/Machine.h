@@ -1,6 +1,4 @@
 #pragma once
-#ifndef MACHINE_H
-#define MACHINE_H
 
 #include <string>
 #include <cstdint>
@@ -42,5 +40,3 @@ public:
     std::string getScreenOutput() const;
     bool isHalted() const;
 };
-
-#endif

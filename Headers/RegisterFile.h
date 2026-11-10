@@ -1,5 +1,5 @@
 #pragma once
-#ifndef REGISTER_FILE_H
+
 #include <cstdint>
 #include <iostream>
 
@@ -16,5 +16,3 @@ public:
     const std::uint8_t* getRegisters() const;
     void clear();
 };
-
-#endif
